@@ -4,6 +4,10 @@
 
 package cipher
 
+import (
+	"unsafe"
+)
+
 // xorBytes xors the bytes in a and b. The destination should have enough
 // space, otherwise xorBytes will panic. Returns the number of bytes xor'd.
 func xorBytes(dst, a, b []byte) int {
@@ -13,6 +17,13 @@ func xorBytes(dst, a, b []byte) int {
 	}
 	if n == 0 {
 		return 0
+	} else if n == 16 {
+		dw := (*[2]uintptr)(unsafe.Pointer(&dst[0]))
+		aw := (*[2]uintptr)(unsafe.Pointer(&a[0]))
+		bw := (*[2]uintptr)(unsafe.Pointer(&b[0]))
+		dw[1] = aw[1] ^ bw[1]
+		dw[0] = aw[0] ^ bw[0]
+		return 16
 	}
 	_ = dst[n-1]
 	xorBytesSSE2(&dst[0], &a[0], &b[0], n) // amd64 must have SSE2
